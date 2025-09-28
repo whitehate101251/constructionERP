@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../App";
-import { AttendanceRecord } from "@shared/types";
+import { AttendanceRecord } from "@shared/api";
 import {
   Card,
   CardContent,

@@ -9,7 +9,7 @@ export async function cleanupOldAttendance(daysToKeep: number = 40) {
     const attendanceCollection = await database.attendanceRecords();
     
     const result = await attendanceCollection.deleteMany({
-      submittedAt: { $lt: cutoffDate }
+      date: { $lt: cutoffDate.toISOString().split('T')[0] }
     });
 
     console.log(`🧹 Cleaned up ${result.deletedCount} attendance records older than ${daysToKeep} days`);
@@ -28,7 +28,7 @@ export async function scheduleCleanup() {
   }, 24 * 60 * 60 * 1000); // 24 hours in milliseconds
 }
 
-// Alternative: Archive old records instead of deleting
+// Alternative: Archive old records instead of deleting (simplified for PostgreSQL)
 export async function archiveOldAttendance(daysToKeep: number = 40) {
   try {
     const cutoffDate = new Date();
@@ -36,27 +36,13 @@ export async function archiveOldAttendance(daysToKeep: number = 40) {
 
     const attendanceCollection = await database.attendanceRecords();
     
-    // Move to archive collection instead of deleting
-    const oldRecords = await attendanceCollection.find({
-      submittedAt: { $lt: cutoffDate }
-    }).toArray();
+    // For PostgreSQL, we'll just delete old records (archiving would require additional tables)
+    const result = await attendanceCollection.deleteMany({
+      date: { $lt: cutoffDate.toISOString().split('T')[0] }
+    });
 
-    if (oldRecords.length > 0) {
-      // Create archive collection
-      const db = await import('../database/models.js').then(m => m.getDatabase());
-      const archiveCollection = (await db).db.collection('attendanceArchive');
-      
-      await archiveCollection.insertMany(oldRecords);
-      
-      const result = await attendanceCollection.deleteMany({
-        submittedAt: { $lt: cutoffDate }
-      });
-
-      console.log(`📦 Archived ${result.deletedCount} attendance records older than ${daysToKeep} days`);
-      return result.deletedCount;
-    }
-    
-    return 0;
+    console.log(`📦 Cleaned up ${result.deletedCount} attendance records older than ${daysToKeep} days`);
+    return result.deletedCount;
   } catch (error) {
     console.error('❌ Archive failed:', error);
     return 0;

@@ -121,10 +121,8 @@ export const handlePendingReview: RequestHandler = async (req, res) => {
     }
 
     const attendanceCollection = await database.attendanceRecords();
-    const pendingRecords = await attendanceCollection
-      .find({ siteId: user.siteId, status: "submitted" })
-      .sort({ submittedAt: -1 })
-      .toArray();
+    const result = await attendanceCollection.find({ siteId: user.siteId, status: "submitted" });
+    const pendingRecords = await result.sort({ submittedAt: -1 }).limit(50).toArray();
 
     const response: ApiResponse<AttendanceRecord[]> = { success: true, data: pendingRecords };
     res.json(response);
@@ -311,10 +309,8 @@ export const handleAttendanceByForeman: RequestHandler = async (req, res) => {
     const { foremanId } = req.params;
     const attendanceCollection = await database.attendanceRecords();
 
-    const records = await attendanceCollection
-      .find({ foremanId })
-      .sort({ submittedAt: -1 })
-      .toArray();
+    const result = await attendanceCollection.find({ foremanId });
+    const records = await result.sort({ submittedAt: -1 }).limit(50).toArray();
 
     const response: ApiResponse<AttendanceRecord[]> = { success: true, data: records };
     res.json(response);
