@@ -356,7 +356,7 @@ export class Database {
   }
 
   async initializeDemoData() {
-    console.log('✅ Production database ready - no demo data needed');
+    console.log('✅ Production database ready - PostgreSQL fixed - no demo data needed');
   }
 }
 
