@@ -1,0 +1,10 @@
+{
+  "env": {
+    "VITE_API_URL": "https://erp-backend-lm5c.onrender.com"
+  },
+  "build": {
+    "env": {
+      "VITE_API_URL": "https://erp-backend-lm5c.onrender.com"
+    }
+  }
+}
