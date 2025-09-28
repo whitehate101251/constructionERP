@@ -6,7 +6,6 @@ export interface User {
   role: "foreman" | "site_incharge" | "admin";
   name: string;
   fatherName?: string;
-  email?: string;
   siteId?: string;
   createdAt: Date;
 }

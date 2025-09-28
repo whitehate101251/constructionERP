@@ -14,17 +14,14 @@ export async function connectToDatabase() {
     pool = new Pool({
       connectionString,
       ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-      // Connection pool configuration for stability
-      max: 10, // Maximum number of clients in the pool
-      min: 2,  // Minimum number of clients in the pool
-      idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-      connectionTimeoutMillis: 10000, // Return error after 10 seconds if connection could not be established
-      // Keep connections alive
+      max: 10,
+      min: 2,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000,
       keepAlive: true,
       keepAliveInitialDelayMillis: 10000,
     });
 
-    // Test connection with retry logic
     let retries = 3;
     while (retries > 0) {
       try {
@@ -36,7 +33,7 @@ export async function connectToDatabase() {
         retries--;
         console.log(`⚠️ Database connection attempt failed, ${retries} retries left`);
         if (retries === 0) throw error;
-        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
     }
   }
@@ -114,11 +111,11 @@ export class Database {
         const client = await pool.connect();
         try {
           const query = `
-            INSERT INTO users (username, role, name, email, site_id)
-            VALUES ($1, $2, $3, $4, $5)
+            INSERT INTO users (username, role, name, site_id)
+            VALUES ($1, $2, $3, $4)
             RETURNING *
           `;
-          const values = [user.username, user.role, user.name, user.email, user.siteId];
+          const values = [user.username, user.role, user.name, user.siteId];
           const result = await client.query(query, values);
           return { insertedId: result.rows[0].id };
         } finally {
@@ -139,30 +136,11 @@ export class Database {
       async updateOne(filter: any, update: any) {
         const client = await pool.connect();
         try {
-          const setClause = Object.keys(update.$set).map((key, index) =>
-            `${key} = $${index + 2}`
-          ).join(', ');
-
+          const setFields = Object.keys(update.$set);
+          const setClause = setFields.map((key, index) => `${key} = $${index + 2}`).join(', ');
           const query = `UPDATE users SET ${setClause} WHERE id = $1`;
           const values = [filter.id, ...Object.values(update.$set)];
-
           await client.query(query, values);
-        } finally {
-          client.release();
-        }
-      },
-
-      async insertMany(users: Partial<User>[]) {
-        const client = await pool.connect();
-        try {
-          const queries = users.map(user => ({
-            text: `INSERT INTO users (id, username, password_hash, role, name, site_id) VALUES ($1, $2, $3, $4, $5, $6)`,
-            values: [user.id, user.username, user.password_hash, user.role, user.name, user.siteId]
-          }));
-
-          for (const query of queries) {
-            await client.query(query.text, query.values);
-          }
         } finally {
           client.release();
         }
@@ -186,80 +164,28 @@ export class Database {
 
           query += ' ORDER BY name';
           const result = await client.query(query, values);
-          return {
-            toArray: async () => result.rows.map(row => ({
-              ...row,
-              siteId: row.site_id,
-              dailyWage: row.daily_wage,
-              fatherName: row.father_name,
-              isActive: row.is_active,
-              createdAt: row.created_at
-            }))
-          };
-        } finally {
-          client.release();
-        }
-      },
-
-      async findOne(filter: any) {
-        const client = await pool.connect();
-        try {
-          let query = 'SELECT * FROM workers WHERE is_active = true';
-          const values: any[] = [];
-
-          if (filter.id) {
-            query += ' AND id = $1';
-            values.push(filter.id);
-          }
-
-          query += ' LIMIT 1';
-          const result = await client.query(query, values);
-          const row = result.rows[0];
-          return row ? {
+          const rows = result.rows.map(row => ({
             ...row,
             siteId: row.site_id,
             dailyWage: row.daily_wage,
             fatherName: row.father_name,
             isActive: row.is_active,
             createdAt: row.created_at
-          } : null;
-        } finally {
-          client.release();
-        }
-      },
-
-      async updateOne(filter: any, update: any) {
-        const client = await pool.connect();
-        try {
-          const setFields = Object.keys(update.$set);
-          const setClause = setFields.map((key, index) => {
-            const dbKey = key === 'siteId' ? 'site_id' :
-              key === 'dailyWage' ? 'daily_wage' :
-                key === 'fatherName' ? 'father_name' :
-                  key === 'isActive' ? 'is_active' : key;
-            return `${dbKey} = $${index + 2}`;
-          }).join(', ');
-
-          const query = `UPDATE workers SET ${setClause} WHERE id = $1`;
-          const values = [filter.id, ...Object.values(update.$set)];
-
-          await client.query(query, values);
-        } finally {
-          client.release();
-        }
-      },
-
-      async insertMany(workers: Partial<Worker>[]) {
-        const client = await pool.connect();
-        try {
-          const queries = workers.map(worker => ({
-            text: `INSERT INTO workers (id, name, father_name, designation, daily_wage, site_id, phone) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-            values: [worker.id, worker.name, worker.fatherName, worker.designation, worker.dailyWage, worker.siteId, worker.phone]
           }));
 
-          for (const query of queries) {
-            await client.query(query.text, query.values);
-          }
+          return {
+            toArray: async () => rows
+          };
+        } finally {
+          client.release();
+        }
+      },
+
+      async countDocuments() {
+        const client = await pool.connect();
+        try {
+          const result = await client.query('SELECT COUNT(*) FROM workers WHERE is_active = true');
+          return parseInt(result.rows[0].count);
         } finally {
           client.release();
         }
@@ -291,6 +217,16 @@ export class Database {
         }
       },
 
+      async countDocuments() {
+        const client = await pool.connect();
+        try {
+          const result = await client.query('SELECT COUNT(*) FROM sites WHERE is_active = true');
+          return parseInt(result.rows[0].count);
+        } finally {
+          client.release();
+        }
+      },
+
       async findOne(filter: any) {
         const client = await pool.connect();
         try {
@@ -317,37 +253,17 @@ export class Database {
         }
       },
 
-      async updateOne(filter: any, update: any) {
+      async insertOne(site: any) {
         const client = await pool.connect();
         try {
-          const setFields = Object.keys(update.$set);
-          const setClause = setFields.map((key, index) => {
-            const dbKey = key === 'inchargeId' ? 'incharge_id' :
-              key === 'inchargeName' ? 'incharge_name' :
-                key === 'isActive' ? 'is_active' : key;
-            return `${dbKey} = $${index + 2}`;
-          }).join(', ');
-
-          const query = `UPDATE sites SET ${setClause} WHERE id = $1`;
-          const values = [filter.id, ...Object.values(update.$set)];
-
-          await client.query(query, values);
-        } finally {
-          client.release();
-        }
-      },
-
-      async insertMany(sites: Partial<Site>[]) {
-        const client = await pool.connect();
-        try {
-          const queries = sites.map(site => ({
-            text: `INSERT INTO sites (id, name, location, incharge_id, incharge_name, is_active) VALUES ($1, $2, $3, $4, $5, $6)`,
-            values: [site.id, site.name, site.location, site.inchargeId, site.inchargeName, site.isActive]
-          }));
-
-          for (const query of queries) {
-            await client.query(query.text, query.values);
-          }
+          const query = `
+            INSERT INTO sites (id, name, location, incharge_id, incharge_name, is_active)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING *
+          `;
+          const values = [site.id, site.name, site.location, site.inchargeId, site.inchargeName, site.isActive];
+          const result = await client.query(query, values);
+          return { insertedId: result.rows[0].id };
         } finally {
           client.release();
         }
@@ -364,7 +280,7 @@ export class Database {
           let query = `
             SELECT ar.*, w.name as worker_name, w.designation, w.daily_wage 
             FROM attendance_records ar 
-            JOIN workers w ON ar.worker_id = w.id
+            LEFT JOIN workers w ON ar.worker_id = w.id
           `;
           const values: any[] = [];
           const conditions: string[] = [];
@@ -383,10 +299,10 @@ export class Database {
             query += ' WHERE ' + conditions.join(' AND ');
           }
 
-          query += ' ORDER BY ar.date DESC, w.name';
+          query += ' ORDER BY ar.date DESC, w.name LIMIT 50';
           const result = await client.query(query, values);
 
-          return result.rows.map(row => ({
+          const rows = result.rows.map(row => ({
             ...row,
             workerId: row.worker_id,
             siteId: row.site_id,
@@ -395,6 +311,25 @@ export class Database {
             workerName: row.worker_name,
             dailyWage: row.daily_wage
           }));
+
+          return {
+            sort: () => ({
+              limit: (num: number) => ({
+                toArray: async () => rows.slice(0, num)
+              })
+            }),
+            toArray: async () => rows
+          };
+        } finally {
+          client.release();
+        }
+      },
+
+      async countDocuments() {
+        const client = await pool.connect();
+        try {
+          const result = await client.query('SELECT COUNT(*) FROM attendance_records');
+          return parseInt(result.rows[0].count);
         } finally {
           client.release();
         }
@@ -420,14 +355,10 @@ export class Database {
     };
   }
 
-  // Production ready - no demo data initialization
   async initializeDemoData() {
     console.log('✅ Production database ready - no demo data needed');
   }
 }
 
-// Export singleton instance getter
 export const getDatabase = Database.getInstance;
-
-// Export the initializeDatabase function for backward compatibility
 export { connectToDatabase as initializeDatabase };
