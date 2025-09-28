@@ -191,10 +191,8 @@ export const handlePendingAdmin: RequestHandler = async (req, res) => {
     }
 
     const attendanceCollection = await database.attendanceRecords();
-    const pendingRecords = await attendanceCollection
-      .find({ status: "incharge_reviewed" })
-      .sort({ reviewedAt: -1 })
-      .toArray();
+    const result = await attendanceCollection.find({ status: "incharge_reviewed" });
+    const pendingRecords = await result.sort().limit(50).toArray();
 
     const response: ApiResponse<AttendanceRecord[]> = { success: true, data: pendingRecords };
     res.json(response);
@@ -290,10 +288,8 @@ export const handleApprovedRecords: RequestHandler = async (req, res) => {
     }
 
     const attendanceCollection = await database.attendanceRecords();
-    const approvedRecords = await attendanceCollection
-      .find({ status: "admin_approved" })
-      .sort({ approvedAt: -1 })
-      .toArray();
+    const result = await attendanceCollection.find({ status: "admin_approved" });
+    const approvedRecords = await result.sort().limit(50).toArray();
 
     const response: ApiResponse<AttendanceRecord[]> = { success: true, data: approvedRecords };
     res.json(response);

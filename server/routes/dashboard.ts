@@ -71,11 +71,8 @@ export const handleRecentAttendance: RequestHandler = async (req, res) => {
       query = { siteId: user.siteId };
     }
 
-    const recentRecords = await attendanceCollection
-      .find(query)
-      .sort({ submittedAt: -1 })
-      .limit(10)
-      .toArray();
+    const result = await attendanceCollection.find(query);
+    const recentRecords = await result.sort().limit(10).toArray();
 
     const response: ApiResponse<AttendanceRecord[]> = { success: true, data: recentRecords };
     res.json(response);

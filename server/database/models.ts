@@ -111,11 +111,11 @@ export class Database {
         const client = await pool.connect();
         try {
           const query = `
-            INSERT INTO users (username, role, name, site_id)
-            VALUES ($1, $2, $3, $4)
+            INSERT INTO users (id, username, role, name, site_id)
+            VALUES ($1, $2, $3, $4, $5)
             RETURNING *
           `;
-          const values = [user.username, user.role, user.name, user.siteId];
+          const values = [user.id, user.username, user.role, user.name, user.siteId];
           const result = await client.query(query, values);
           return { insertedId: result.rows[0].id };
         } finally {

@@ -200,7 +200,8 @@ export const handleCreateSite: RequestHandler = async (req, res) => {
 export const handleListSites: RequestHandler = async (req, res) => {
   try {
     const sitesCollection = await database.sites();
-    const sites = await sitesCollection.find({}).toArray();
+    const result = await sitesCollection.find({});
+    const sites = await result.toArray();
     
     const response: ApiResponse<Site[]> = { success: true, data: sites };
     res.json(response);
