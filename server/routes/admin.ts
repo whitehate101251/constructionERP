@@ -1,3 +1,4 @@
+import bcrypt from "bcryptjs";
 import type { RequestHandler } from "express";
 import { ApiResponse, CreateSiteRequest, CreateUserRequest, Site, User } from "@shared/api";
 import { database } from "../database/connection.js";
@@ -27,6 +28,10 @@ export const handleCreateUser: RequestHandler = async (req, res) => {
       return res.status(400).json(response);
     }
 
+    // ✅ Hash the password before saving
+    const salt = bcrypt.genSaltSync(10);
+    const hashedPassword = bcrypt.hashSync(password, salt);
+
     const newUser: User = {
       id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       username,
@@ -34,6 +39,7 @@ export const handleCreateUser: RequestHandler = async (req, res) => {
       name,
       fatherName,
       siteId,
+      password_hash: hashedPassword, // ✅ save the hash
       createdAt: new Date(),
     };
 
