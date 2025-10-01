@@ -109,7 +109,17 @@ export const handleUpdateUser: RequestHandler = async (req, res) => {
     if (username) updateData.username = username;
     if (name) updateData.name = name;
     if (fatherName) updateData.fatherName = fatherName;
-    if (siteId) updateData.siteId = siteId;
+    if (siteId) {
+  updateData.siteId = siteId;
+
+  // 🧠 Also set inchargeId based on the site
+  const sitesCollection = await database.sites();
+  const site = await sitesCollection.findOne({ id: siteId });
+
+  if (site && site.inchargeId) {
+    updateData.inchargeId = site.inchargeId;
+  }
+}
     if (incharge_id) updateData.incharge_id = incharge_id;
 
     await usersCollection.updateOne({ id }, { $set: updateData });
