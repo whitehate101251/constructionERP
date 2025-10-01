@@ -94,7 +94,7 @@ export const handleUpdateUser: RequestHandler = async (req, res) => {
       return res.status(404).json(response);
     }
 
-    const { username, name, fatherName, siteId } = req.body;
+    const { username, name, fatherName, siteId, incharge_id } = req.body;
     
     // Check if new username conflicts
     if (username && username !== user.username) {
@@ -110,6 +110,7 @@ export const handleUpdateUser: RequestHandler = async (req, res) => {
     if (name) updateData.name = name;
     if (fatherName) updateData.fatherName = fatherName;
     if (siteId) updateData.siteId = siteId;
+    if (incharge_id) updateData.incharge_id = incharge_id;
 
     await usersCollection.updateOne({ id }, { $set: updateData });
     
