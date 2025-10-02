@@ -77,7 +77,12 @@ export const corsOptions = {
     if (origin.startsWith('http://localhost')) return callback(null, true);
 
     // Allow any *.vercel.app domain under your project
-    if (origin.endsWith('.vercel.app')) return callback(null, true);
+    if (
+  origin === 'https://construction-joic96bc4-nomnoms-projects-a2cfdc41.vercel.app' ||
+  origin.startsWith('http://localhost')
+) {
+  return callback(null, true);
+}
 
     // Else, block
     return callback(new Error('Not allowed by CORS'));
