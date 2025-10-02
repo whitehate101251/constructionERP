@@ -31,7 +31,15 @@ export const handleCreateUser: RequestHandler = async (req, res) => {
     // ✅ Hash the password before saving
     const salt = bcrypt.genSaltSync(10);
     const hashedPassword = bcrypt.hashSync(password, salt);
+    let resolvedInchargeId = body.inchargeId;
 
+    if (!resolvedInchargeId && siteId) {
+      const sitesCollection = await database.sites();
+      const site = await sitesCollection.findOne({ id: siteId });
+      if (site?.inchargeId) {
+        resolvedInchargeId = site.inchargeId;
+      }
+    }
     const newUser: User = {
       id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       username,
@@ -39,6 +47,7 @@ export const handleCreateUser: RequestHandler = async (req, res) => {
       name,
       fatherName,
       siteId,
+      incharge_id: resolvedInchargeId || "", // 👈 Added this line
       password_hash: hashedPassword, // ✅ save the hash
       createdAt: new Date(),
     };
@@ -94,7 +103,7 @@ export const handleUpdateUser: RequestHandler = async (req, res) => {
       return res.status(404).json(response);
     }
 
-    const { username, name, fatherName, siteId, incharge_id } = req.body;
+    const { username, name, fatherName, siteId, inchargeId } = req.body;
     
     // Check if new username conflicts
     if (username && username !== user.username) {
@@ -105,22 +114,25 @@ export const handleUpdateUser: RequestHandler = async (req, res) => {
       }
     }
 
-    const updateData: Partial<User> = {};
-    if (username) updateData.username = username;
-    if (name) updateData.name = name;
-    if (fatherName) updateData.fatherName = fatherName;
-    if (siteId) {
-  updateData.siteId = siteId;
+   const updateData: Partial<User> = {};
 
-  // 🧠 Also set inchargeId based on the site
+if (username) updateData.username = username;
+if (name) updateData.name = name;
+if (fatherName) updateData.fatherName = fatherName;
+
+if (siteId) {
+  updateData.siteId = siteId;
+}
+
+if (inchargeId) {
+  updateData.incharge_id = inchargeId;
+} else if (siteId) {
   const sitesCollection = await database.sites();
   const site = await sitesCollection.findOne({ id: siteId });
-
-  if (site && site.inchargeId) {
-    updateData.inchargeId = site.inchargeId;
+  if (site?.inchargeId) {
+    updateData.incharge_id = site.inchargeId;
   }
 }
-    if (incharge_id) updateData.incharge_id = incharge_id;
 
     await usersCollection.updateOne({ id }, { $set: updateData });
     
