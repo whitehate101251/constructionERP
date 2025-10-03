@@ -1,5 +1,6 @@
 import { RequestHandler } from "express";
 import { ApiResponse } from "@shared/api";
+import cors from "cors";
 
 // Rate limiting store (in-memory for simplicity)
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
