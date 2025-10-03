@@ -75,13 +75,18 @@ function AuthProvider({ children }: { children: ReactNode }) {
   setUser(camelUser);
 };
   const updateUser = (partial: Partial<User>) => {
-    setUser((prev) => {
-      if (!prev) return prev as any;
-      const next = { ...prev, ...partial } as User;
-      localStorage.setItem("user_data", JSON.stringify(next));
-      return next;
-    });
-  };
+  setUser((prev) => {
+    if (!prev) return prev as any;
+
+    const next = { ...prev, ...partial };
+    
+    // Persist updated user to localStorage
+    localStorage.setItem("user_data", JSON.stringify(next));
+
+    return next;
+  });
+};
+
 
   const logout = () => {
     localStorage.removeItem("auth_token");
