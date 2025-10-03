@@ -30,7 +30,8 @@ export default function Login() {
         method: "POST",
         body: JSON.stringify(formData),
       });
-
+      const result: ApiResponse<LoginResponse> = await response.json();
+console.log("🟢 Login API Response:", result);
       const result: ApiResponse<LoginResponse> = await response.json();
 
       if (result.success && result.data) {
