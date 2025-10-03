@@ -56,7 +56,8 @@ const isProduction = process.env.NODE_ENV === "production";
 // Create Express app with all routes configured
 export function createServer() {
   const app = express();
-
+  // preflight
+  app.options("*", cors(corsOptions));
   // Security Middleware
   app.use(cors(corsOptions));
   app.use(express.json({ limit: '10mb' }));
