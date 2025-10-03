@@ -61,11 +61,19 @@ function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = (user: User, token: string) => {
-    localStorage.setItem("auth_token", token);
-    localStorage.setItem("user_data", JSON.stringify(user));
-    setUser(user);
+  const camelUser = {
+    ...user,
+    siteId: user.site_id,
+    inchargeId: user.incharge_id,
+    // optionally remove snake_case to avoid confusion
+    // site_id: undefined,
+    // incharge_id: undefined,
   };
 
+  localStorage.setItem("auth_token", token);
+  localStorage.setItem("user_data", JSON.stringify(camelUser));
+  setUser(camelUser);
+};
   const updateUser = (partial: Partial<User>) => {
     setUser((prev) => {
       if (!prev) return prev as any;
