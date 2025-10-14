@@ -68,6 +68,7 @@ export const sanitizeInput: RequestHandler = (req, res, next) => {
   next();
 };
 
+// CORS configuration for production
 export const corsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
     // Allow if no origin (e.g. curl or Postman)
@@ -76,10 +77,13 @@ export const corsOptions = {
     // Always allow localhost
     if (origin.startsWith('http://localhost')) return callback(null, true);
 
-    // Allow the actual frontend URL
-    if (origin === 'https://construction-erp-henna.vercel.app') {
-      return callback(null, true);
-    }
+    // Allow any *.vercel.app domain under your project
+    if (
+  origin === 'https://construction-joic96bc4-nomnoms-projects-a2cfdc41.vercel.app' ||
+  origin.startsWith('http://localhost')
+) {
+  return callback(null, true);
+}
 
     // Else, block
     return callback(new Error('Not allowed by CORS'));
