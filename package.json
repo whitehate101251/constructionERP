@@ -16,7 +16,7 @@
     "build:client": "vite build",
     "build:server": "npx vite build --config vite.config.server.ts",
     "start": "npm run dev",
-    "start:prod": "node dist/server/node-build.js",
+    "start:prod": "node dist/server/node-build.mjs",
     "test": "vitest --run",
     "format.fix": "prettier --write .",
     "typecheck": "tsc",
