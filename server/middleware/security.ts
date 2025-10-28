@@ -69,23 +69,24 @@ export const sanitizeInput: RequestHandler = (req, res, next) => {
 };
 
 // CORS configuration for production
+// security.ts
 export const corsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-    // Allow if no origin (e.g. curl or Postman)
+    // Allow requests with no origin (e.g., Postman, server-to-server)
     if (!origin) return callback(null, true);
 
-    // Always allow localhost
-    if (origin.startsWith('http://localhost')) return callback(null, true);
+    const allowedOrigins = [
+      'https://construction-erp-henna.vercel.app', // main frontend
+      'https://construction-joic96bc4-nomnoms-projects-a2cfdc41.vercel.app', // old vercel env
+      'http://localhost:5173', // Vite dev
+      'http://localhost:3000'
+    ];
 
-    // Allow any *.vercel.app domain under your project
-    if (
-  origin === 'https://construction-joic96bc4-nomnoms-projects-a2cfdc41.vercel.app' ||
-  origin.startsWith('http://localhost')
-) {
-  return callback(null, true);
-}
+    if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+      return callback(null, true);
+    }
 
-    // Else, block
+    console.warn('❌ Blocked by CORS:', origin);
     return callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
