@@ -56,22 +56,14 @@ const isProduction = process.env.NODE_ENV === "production";
 // Create Express app with all routes configured
 export function createServer() {
   const app = express();
-  // preflight
- app.use(cors(corsOptions)); // This handles all OPTIONS internally
+// ✅ Proper CORS & Middleware setup
+app.use(cors(corsOptions)); // Apply once globally
+app.options('*', cors(corsOptions)); // Handle all OPTIONS preflight requests
 
-// If you really need OPTIONS explicitly:
-app.use((req, res, next) => {
-  if (req.method === "OPTIONS") {
-    res.sendStatus(200);
-  } else {
-    next();
-  }
-});           // yaha pe end hogya
-  // Security Middleware
-  app.use(cors(corsOptions));
-  app.use(express.json({ limit: '10mb' }));
-  app.use(sanitizeInput);
-  app.use('/api/', rateLimit(100, 15 * 60 * 1000)); // 100 requests per 15 minutes
+app.use(express.json({ limit: '10mb' }));
+app.use(sanitizeInput);
+app.use('/api/', rateLimit(100, 15 * 60 * 1000)); // 100 requests per 15 minutes
+
 
   // API Routes
 
