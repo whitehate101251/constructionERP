@@ -58,7 +58,7 @@ export function createServer() {
   const app = express();
 // ✅ Proper CORS & Middleware setup
 app.use(cors(corsOptions)); // Apply once globally
-app.options('/*', cors(corsOptions)); // Handle all OPTIONS preflight requests
+app.options('/.*/', cors(corsOptions)); // Handle all OPTIONS preflight requests
 
 app.use(express.json({ limit: '10mb' }));
 app.use(sanitizeInput);
