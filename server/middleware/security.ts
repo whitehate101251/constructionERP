@@ -72,17 +72,18 @@ export const sanitizeInput: RequestHandler = (req, res, next) => {
 // security.ts
 export const corsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-    // Allow requests with no origin (e.g., Postman, server-to-server)
+    // ✅ Always allow if no origin (server-side / Postman)
     if (!origin) return callback(null, true);
 
     const allowedOrigins = [
-      'https://construction-erp-henna.vercel.app', // main frontend
-      'https://construction-joic96bc4-nomnoms-projects-a2cfdc41.vercel.app', // old vercel env
-      'http://localhost:5173', // Vite dev
+      'https://construction-erp-henna.vercel.app',
+      'https://construction-joic96bc4-nomnoms-projects-a2cfdc41.vercel.app',
+      'http://localhost:5173',
       'http://localhost:3000'
     ];
 
-    if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+    // ✅ Match exact OR any vercel.app subdomain
+    if (allowedOrigins.includes(origin) || /\.vercel\.app$/.test(origin)) {
       return callback(null, true);
     }
 
